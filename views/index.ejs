@@ -1,0 +1,26 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-2 d-flex">
+  <div class="row justify-content-center">
+
+    <% for (let bag of bags){ %>
+        <div class="card mx-2 mb-2 text-center" style="width: 18rem">
+            <img
+              class="card-img-top"
+              src="<%= bag.url %> "
+              alt="Card image cap"/>
+            <div class="card-body">
+              <h5 class="card-title"><%= bag.name %> </h5>
+                <p>$<%= bag.price %></p>
+                <form action="">
+                    <a href="" class="btn btn-primary">Add to Cart</a>
+                </form>
+              
+            </div>
+          </div>
+    <% } %>
+
+
+
+  </div>
+</div>
