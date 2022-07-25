@@ -12,10 +12,7 @@
             <div class="card-body">
               <h5 class="card-title"><%= bag.name %> </h5>
                 <p>$<%= bag.price %></p>
-                <form action="">
-                    <a href="" class="btn btn-primary">Add to Cart</a>
-                </form>
-              
+              <a href="/addToCart/<%=bag._id%>" class="btn btn-primary">Add to Cart</a>
             </div>
           </div>
     <% } %>
