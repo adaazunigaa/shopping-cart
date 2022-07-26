@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+    require("dotenv").config();
+};
+
 const express = require("express");
 const app = express();
 const path = require("path")
@@ -5,6 +9,21 @@ const ejsMate = require("ejs-mate");
 const Bags = require("./models/bags");
 const MongoStore = require('connect-mongo');
 const session  = require('express-session');
+const nodemailer = require("nodemailer");
+
+
+const transporter = nodemailer.createTransport({
+    service: "hotmail",
+    auth: {
+        user: process.env.EMAIL,
+        pass:  process.env.PASSWORD
+    },
+    tls: {
+        rejectUnauthorized: false,
+    }
+});
+
+
 
 const Cart = require("./models/cart");
 
@@ -31,6 +50,7 @@ app.use(express.static(path.join(__dirname, "public")));
 //app.use(express.static(path.join(__dirname, "images")));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.engine("ejs", ejsMate);
 
@@ -127,8 +147,40 @@ app.get("/shoppingCart", (req,res)=> {
         return res.render('/cart', {products: null});
     }
     const cart = new Cart(req.session.cart);
-    console.log(cart.generateArray());
+    //console.log(cart.generateArray());
     return res.render("shopping_cart", {products: cart.generateArray(), totalPrice: cart.totalPrice})
+})
+
+app.get("/checkout", (req, res)=>{
+    res.render("checkout")
+})
+
+app.post("/email", (req,res)=>{
+    const cart = new Cart(req.session.cart);
+
+    const {email, userName} = req.body;
+    let mailOptions = {
+        from: "elcentroada@hotmail.com",
+        to: email,
+        subject: "Thank you for your purchase",
+        text: `Hello ${userName} \n
+
+
+        Your cart has ${cart.totalQty} item(s), and  \n
+        Your total is $${cart.totalPrice}`
+    };
+    
+    transporter.sendMail(mailOptions, function(err, success){
+        if(err){
+            res.redirect("/")
+            //console.log(err)
+        }else{
+            req.session.destroy();
+            res.redirect("/")
+           // console.log("email")
+        }
+    });
+    
 })
 
 
