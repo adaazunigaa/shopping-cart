@@ -1,0 +1,28 @@
+<% layout("./layouts/boilerplate") %>
+
+<div class="container mt-2">
+  <div class="row justify-content-center">
+    <% if(!cart) { %>
+    <h2>There is nothing in your cart</h2>
+    <% } else { %> <% products.forEach((element) => { %>
+    <div class="card mx-2 mb-2  " style="width: 18rem">
+      <img
+        class="card-img-top"
+        src="<%=element.item.url%>"
+        alt="Card image cap"
+      />
+      <div class="card-body">
+        <h5 class="card-title"><%=element.item.name%></h5>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">Price: <%= element.item.price %> X <%= element.qty %> = <%= element.price %>   </li>
+        <li class="list-group-item">Quantity <%= element.qty %> </li>
+        <li class="list-group-item"></li>
+      </ul>
+    </div> <p></p>
+    <% })%> <% } %>
+    <p class="text-center">Total: <%=cart.totalPrice %></p>
+
+    <button>checkout</button>
+  </div>
+</div>

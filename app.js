@@ -12,6 +12,7 @@ const Cart = require("./models/cart");
 
 const mongoose = require("mongoose");
 const cart = require("./models/cart");
+const { createWriteStream } = require("fs");
 
 const dbURL = process.env.DB_URL ||  "mongodb://localhost:27017/shoppingCart";
 mongoose.connect(dbURL);
@@ -86,7 +87,7 @@ app.post("/newBag", async (req, res)=> {
 app.get("/showBags", async (req, res) => {
     const bags = await Bags.find({});
     res.render("index.ejs", { bags })
-})
+});
 
 app.get("/addToCart/:id", async(req, res)=>{
     
@@ -94,14 +95,42 @@ app.get("/addToCart/:id", async(req, res)=>{
 
     const bag = await Bags.findById(req.params.id)
     if(!bag){
-        // req.flash("error", "MUA was not found!");
+        // req.flash("error", "not found!");
         return res.redirect("/home")
     }
     cart.add(bag, bag._id);
     req.session.cart = cart;
-    console.log(req.session.cart);
+    //console.log(req.session.cart);
     res.redirect("/showBags");
+});
+
+
+app.get("/shoppingCart", (req,res)=> {
+// let cart = new Cart(req.session.cart)
+    // //console.log(cart);
+    // //console.log(cart.items)
+    // for (let id in cart.items){
+    //    // console.log(id);
+    //     const ID = toString(id);
+    //     console.log(cart.items)
+    // }
+
+    // // const newCart = new Cart(req.session.cart)
+
+    // if(!req.session.cart){
+    //     return res.render("shopping_cart")
+    // }
+    
+    //console.log(cart)
+    //console.log(cart.generateArray());
+    if(!req.session.cart) {
+        return res.render('/cart', {products: null});
+    }
+    const cart = new Cart(req.session.cart);
+    console.log(cart.generateArray());
+    return res.render("shopping_cart", {products: cart.generateArray(), totalPrice: cart.totalPrice})
 })
+
 
 
 const port = process.env.PORT || 3000;
