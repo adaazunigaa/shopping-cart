@@ -7,9 +7,15 @@ const app = express();
 const path = require("path")
 const ejsMate = require("ejs-mate");
 const Bags = require("./models/bags");
-const MongoStore = require('connect-mongo');
 const session  = require('express-session');
 const nodemailer = require("nodemailer");
+
+const helmet = require("helmet");
+
+const mongoose = require("mongoose");
+const MongoStore = require('connect-mongo');
+const Cart = require("./models/cart");
+
 
 
 const transporter = nodemailer.createTransport({
@@ -23,15 +29,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
-
-const Cart = require("./models/cart");
-
-
-
-const mongoose = require("mongoose");
-const cart = require("./models/cart");
-const { createWriteStream } = require("fs");
 
 const dbURL = process.env.DB_URL ||  "mongodb://localhost:27017/shoppingCart";
 mongoose.connect(dbURL);
@@ -54,12 +51,56 @@ app.use(express.json());
 
 app.engine("ejs", ejsMate);
 
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://res.cloudinary.com/dzbcso9z0/"
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+    "https://cdn.jsdelivr.net/",
+];
+
+
+
+const fontSrcUrls = [ "https://res.cloudinary.com/dzbcso9z0/", "https://fonts.gstatic.com", "https://fonts.googleapis.com/" ];
+ 
+app.use(
+    helmet.contentSecurityPolicy({
+        directives : {
+            defaultSrc : [],
+            connectSrc : [ "'self'"],
+            scriptSrc  : [ "'unsafe-inline'", "'self'", ...scriptSrcUrls ],
+            styleSrc   : [ "'self'", "'unsafe-inline'", ...styleSrcUrls ],
+            workerSrc  : [ "'self'", "blob:" ],
+            objectSrc  : [],
+            imgSrc     : [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://images.unsplash.com/",
+            ],
+            fontSrc    : [ "'self'", ...fontSrcUrls ],
+            mediaSrc   : [  ],
+            childSrc   : [ "blob:" ]
+        }
+    })
+);
+
+
+
+
 
 const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
 
 const store = MongoStore.create({
     mongoUrl: dbURL,
-    touchAfter: 24 * 60 * 60,
+    touchAfter: 24 * 60 * 60, //time in sec
     crypto: {
         secret,
     }
@@ -68,6 +109,7 @@ const store = MongoStore.create({
 store.on("Error", function(e){
     console.log("session store error", e)
 })
+
 const sessionConfig = {
     store,
     name: "session",
@@ -115,7 +157,6 @@ app.get("/addToCart/:id", async(req, res)=>{
 
     const bag = await Bags.findById(req.params.id)
     if(!bag){
-        // req.flash("error", "not found!");
         return res.redirect("/home")
     }
     cart.add(bag, bag._id);
@@ -126,25 +167,8 @@ app.get("/addToCart/:id", async(req, res)=>{
 
 
 app.get("/shoppingCart", (req,res)=> {
-// let cart = new Cart(req.session.cart)
-    // //console.log(cart);
-    // //console.log(cart.items)
-    // for (let id in cart.items){
-    //    // console.log(id);
-    //     const ID = toString(id);
-    //     console.log(cart.items)
-    // }
-
-    // // const newCart = new Cart(req.session.cart)
-
-    // if(!req.session.cart){
-    //     return res.render("shopping_cart")
-    // }
-    
-    //console.log(cart)
-    //console.log(cart.generateArray());
     if(!req.session.cart) {
-        return res.render('/cart', {products: null});
+        return res.render('shopping_cart');
     }
     const cart = new Cart(req.session.cart);
     //console.log(cart.generateArray());
